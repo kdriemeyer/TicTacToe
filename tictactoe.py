@@ -1,22 +1,22 @@
 # Tic Tac Toe
 
-import random
+import random, copy
 
 def drawBoard(board):
     # This function prints out the board that it was passed.
 
-    # "board" is a list of 10 strings representing the board (ignore index 0)
+    # "board" is a list of lists representing the board
 
     print('   |   |')
-    print(' ' + board[7] + ' | ' + board[8] + ' | ' + board[9])
+    print(' ' + board[0][0] + ' | ' + board[0][1] + ' | ' + board[0][2])
     print('   |   |')
     print('-----------')
     print('   |   |')
-    print(' ' + board[4] + ' | ' + board[5] + ' | ' + board[6])
+    print(' ' + board[1][0] + ' | ' + board[1][1] + ' | ' + board[1][2])
     print('   |   |')
     print('-----------')
     print('   |   |')
-    print(' ' + board[1] + ' | ' + board[2] + ' | ' + board[3])
+    print(' ' + board[2][0] + ' | ' + board[2][1] + ' | ' + board[2][2])
 
 def inputPlayerLetter():
     # Lets the player type which letter they want to be.
@@ -44,42 +44,45 @@ def playAgain():
     print('Do you want to play again? (yes or no)')
     return input().lower().startswith('y')
 
-def makeMove(board, letter, move):
-    board[move] = letter
+def makeMove(b, letter, move):
+    b[move[0]][move[1]] = letter
 
 def isWinner(bo, le):
     # Given a board and a player's letter, this function returns True if that player has won.
     # We use bo for 'board' and le for 'letter'
     return (
-        (bo[7] == le and bo[8] == le and bo[9] == le)  or #accross the top
-        (bo[4] == le and bo[5] == le and bo[6] == le) or #accross the middle
-        (bo[1] == le and bo[2] == le and bo[3] == le) or #accross the bottom
-        (bo[7] == le and bo[4] == le and bo[1] == le) or #down the left side#
-        (bo[8] == le and bo[5] == le and bo[2] == le) or #down the middle
-        (bo[9] == le and bo[6] == le and bo[3] == le) or #down the right side
-        (bo[7] == le and bo[5] == le and bo[3] == le) or #diagonal 1
-        (bo[1] == le and bo[5] == le and bo[9] == le)) #diagonal 2
+        (bo[0][0] == le and bo[0][1] == le and bo[0][2] == le) or #accross the top
+        (bo[1][0] == le and bo[1][1] == le and bo[1][2] == le) or #accross the middle
+        (bo[2][0] == le and bo[2][1] == le and bo[2][2] == le) or #accross the bottom
+        (bo[0][0] == le and bo[1][0] == le and bo[2][0] == le) or #down the left side#
+        (bo[0][1] == le and bo[1][1] == le and bo[2][1] == le) or #down the middle
+        (bo[0][2] == le and bo[1][2] == le and bo[2][2] == le) or #down the right side
+        (bo[0][0] == le and bo[1][1] == le and bo[2][2] == le) or #diagonal 1
+        (bo[0][2] == le and bo[1][1] == le and bo[2][0] == le)) #diagonal 2
 
 def getBoardCopy(board):
     #Make a duplicate of the board list and return the duplicate
-    dupeBoard = []
 
-    for i in board:
-        dupeBoard.append(i)
+    dupeBoard = copy.deepcopy(board)
 
     return dupeBoard
 
 def isSpaceFree(board, move):
     # Return true if the passed move is legal on the passed board
-    return board[move] == ' '
+    return board[move[0]][move[1]] == ' '
 
 def getPlayerMove(board):
     # Let the player type in their move
-    move = ''
-    while move not in '1 2 3 4 5 6 7 8 9'.split() or not isSpaceFree(board, int(move)):
-        print('What is your next move? (1-9)')
-        move = input()
-    return int(move)
+    row = ' '
+    col = ' '
+
+    while (row not in '0 1 2'.split() and col not in '0 1 2'.split()) or not isSpaceFree(board, [int(row), int(col)]):
+        print('What is your next move?')
+        row = input('Enter row between 0 and 2')
+        col = input('Enter column between 0 and 2')
+        move = [int(row), int(col)]
+
+    return move
 
 def chooseRandomMoveFromList(board, movesList):
     # Returns a valid move from the passed list on the passed board
@@ -103,39 +106,44 @@ def getComputerMove(board, computerLetter):
 
     # Here is our algorithm for our Tic Tac Toe AI:
     # First, check if we can win in the next move
-    for i in range(1, 10):
-        copy = getBoardCopy(board)
-        if isSpaceFree(copy, i):
-            makeMove(copy, computerLetter, i)
-            if isWinner(copy, computerLetter):
-                return i
+    for r in range(0, 3):
+        for c in range(0, 3):
+            copy = getBoardCopy(board)
+            i = [r, c]
+            if isSpaceFree(copy, i):
+                makeMove(copy, computerLetter, i)
+                if isWinner(copy, computerLetter):
+                    return i
 
     # Check if the player could win on their next move, and block them.
-    for i in range(1, 10):
-        copy = getBoardCopy(board)
-        if isSpaceFree(copy, i):
-            makeMove(copy, playerLetter, i)
-            if isWinner(copy, playerLetter):
-                return i
+    for r in range(0, 3):
+        for c in range (0, 3):
+            copy = getBoardCopy(board)
+            i = [r, c]
+            if isSpaceFree(copy, i):
+                makeMove(copy, playerLetter, i)
+                if isWinner(copy, playerLetter):
+                    return i
 
     # Try to take one of the corners, if free
-    move = chooseRandomMoveFromList(board, [1, 3, 7, 9])
+    move = chooseRandomMoveFromList(board, [[0, 0], [0, 2], [2, 0], [2, 2]])
     if move is not None:
         return move
 
     # Try to take the center, if free
-    if isSpaceFree(board, 5):
-        return 5
+    if isSpaceFree(board, [1, 1]):
+        return [1, 1]
 
     # Move on one of the sides.
-    return chooseRandomMoveFromList(board, [2, 4, 6, 8])
+    return chooseRandomMoveFromList(board, [[0, 1], [1, 0], [1, 2], [2, 1]])
 
 def isBoardFull(board):
     # Return True if every space on the board has been taken. Otherwise return false.
 
-    for i in range(1, 10):
-        if isSpaceFree(board, i):
-            return False
+    for r in range(0, 3):
+        for c in range(0, 3):
+            if isSpaceFree(board, [r, c]):
+                return False
     return True
 
 
@@ -144,7 +152,7 @@ print('Welcome to Tic Tac Toe!')
 
 while True:
     # Reset the board
-    theBoard = [' '] * 10
+    theBoard = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
     playerLetter, computerLetter = inputPlayerLetter()
     turn = whoGoesFirst()
     print('The ' + turn + ' will go first.')
